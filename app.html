@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Rya coffee</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Rya coffee">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#ECE7E1">
+<link rel="apple-touch-icon" href="rya-icon-180.png">
+<link rel="icon" type="image/png" href="rya-icon.png">
+<style>
+  html,body{margin:0;height:100%;background:#ECE7E1}
+  body{padding-top:env(safe-area-inset-top,0px);box-sizing:border-box}
+  iframe{border:0;width:100%;height:100%;display:block}
+</style>
+</head>
+<body>
+<!-- نسخة التطبيق من بطاقة ولاء Rya: تعرض نظام الولاء من Google Apps Script بأيقونة Rya -->
+<iframe id="rya" title="Rya coffee" allow="autoplay; clipboard-write"></iframe>
+<script>
+  var EXEC = "https://script.google.com/macros/s/AKfycbzlzX0oYt1o0XAChJR1vTn0quzYmQeV73WbeLYPECiQvR85zmz1BX9fTAAfhe0xh0mVBg/exec";
+  var params = new URLSearchParams(location.search);
+  var t = (params.get("t") || "").replace(/[^a-f0-9]/g, "");
+  try { if (t) localStorage.setItem("rya_t", t); else t = localStorage.getItem("rya_t") || ""; } catch (e) {}
+  if (t && !params.get("t")) history.replaceState(null, "", "?t=" + t);
+  document.getElementById("rya").src = EXEC + "?w=1" + (t ? "&t=" + t : "");
+  // صفحة الولاء ترسل رابط الدخول بعد ما يدخل الزبون، فنحفظه هنا عشان الأيقونة تفتح بطاقته على طول
+  window.addEventListener("message", function (e) {
+    if (!/\.googleusercontent\.com$/.test(new URL(e.origin).hostname)) return;
+    if (!e.data || typeof e.data.rya_t !== "string") return;
+    var nt = e.data.rya_t.replace(/[^a-f0-9]/g, "");
+    try { if (nt) localStorage.setItem("rya_t", nt); else localStorage.removeItem("rya_t"); } catch (x) {}
+    history.replaceState(null, "", nt ? "?t=" + nt : location.pathname);
+  });
+</script>
+</body>
+</html>
