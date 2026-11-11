@@ -96,6 +96,7 @@
       try {
         await OneSignal.init({
           appId: ONESIGNAL_APP_ID.trim(),
+          safari_web_id: "web.onesignal.auto.24e91fba-47ec-4183-a873-89e8fb038de6",
           serviceWorkerPath: "RYA-COFFEE/OneSignalSDKWorker.js",
           serviceWorkerParam: { scope: "/RYA-COFFEE/" },
           notifyButton: { enable: false },
@@ -104,7 +105,13 @@
         osReady = true; linkUser(); updateBell();
         OneSignal.Notifications.addEventListener("permissionChange", function () { linkUser(); updateBell(); });
         // إذا الإذن موجود من قبل نتأكد إنه مشترك
-        if (Notification.permission === "granted") { try { OneSignal.User.PushSubscription.optIn(); } catch (e) {} }
+        if (Notification.permission === "granted") {
+          try { await OneSignal.User.PushSubscription.optIn(); } catch (e) {}
+          linkUser();
+          setTimeout(function () {
+            if (!OneSignal.User.PushSubscription.id) bellMsg("🔔 التنبيهات تحتاج تفعيل مرة ثانية", "فعّل");
+          }, 6000);
+        }
       } catch (e) { osError = (e && e.message) || String(e); if (Notification.permission === "granted") bellMsg("تعذّر تشغيل التنبيهات: " + osError, ""); }
     });
   }
@@ -132,6 +139,16 @@
       return waitOS(15000);
     }).then(function () {
       return OneSignal.User.PushSubscription.optIn();
+    }).then(function () {
+      linkUser();
+      return new Promise(function (res, rej) {
+        var t0 = Date.now();
+        (function chk() {
+          if (OneSignal.User.PushSubscription.id) return res();
+          if (Date.now() - t0 > 12000) return rej(new Error("ما انسجّل الجوال في خدمة التنبيهات"));
+          setTimeout(chk, 400);
+        })();
+      });
     }).then(function () {
       linkUser();
       bellMsg("✅ تم تفعيل التنبيهات", "");
