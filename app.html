@@ -105,14 +105,41 @@
         OneSignal.Notifications.addEventListener("permissionChange", function () { linkUser(); updateBell(); });
         // إذا الإذن موجود من قبل نتأكد إنه مشترك
         if (Notification.permission === "granted") { try { OneSignal.User.PushSubscription.optIn(); } catch (e) {} }
-      } catch (e) { osError = (e && e.message) || String(e); }
+      } catch (e) { osError = (e && e.message) || String(e); if (Notification.permission === "granted") bellMsg("تعذّر تشغيل التنبيهات: " + osError, ""); }
     });
   }
   updateBell();
+  function waitOS(ms) {
+    return new Promise(function (res, rej) {
+      var t0 = Date.now();
+      (function check() {
+        if (osReady) return res();
+        if (osError) return rej(new Error(osError));
+        if (Date.now() - t0 > ms) return rej(new Error("خدمة التنبيهات ما ردّت"));
+        setTimeout(check, 300);
+      })();
+    });
+  }
   document.getElementById("bellOn").onclick = function () {
-    if (osError) { bellMsg("تعذّر تفعيل التنبيهات: " + osError, "إعادة"); osError = ""; return; }
-    if (!osReady || !window.OneSignal || !OneSignal.Notifications) { bellMsg("لحظة، نجهّز التنبيهات… اضغط مرة ثانية بعد ثواني", "فعّل"); return; }
-    OneSignal.Notifications.requestPermission().then(function () { linkUser(); updateBell(); });
+    // نافذة السماح لازم تنفتح مباشرة من ضغطة الزر (شرط الآيفون)
+    var req;
+    try { req = Notification.requestPermission(); } catch (e) { bellMsg("تعذّر فتح نافذة السماح: " + e.message, "إعادة"); return; }
+    bellMsg("⏳ جارٍ التفعيل…", "");
+    Promise.resolve(req).then(function (perm) {
+      perm = perm || Notification.permission;
+      if (perm === "denied") { bellMsg("🔕 اخترت «لا تسمح». عشان تفعّلها: احذف أيقونة Rya وأضفها من جديد.", ""); throw null; }
+      if (perm !== "granted") { bellMsg("🔔 ما تم السماح. اضغط «فعّل» واختر «سماح».", "فعّل"); throw null; }
+      return waitOS(15000);
+    }).then(function () {
+      return OneSignal.User.PushSubscription.optIn();
+    }).then(function () {
+      linkUser();
+      bellMsg("✅ تم تفعيل التنبيهات", "");
+      setTimeout(function () { document.getElementById("bell").hidden = true; }, 2500);
+    }).catch(function (e) {
+      if (e === null) return;
+      bellMsg("تعذّر ربط التنبيهات: " + ((e && e.message) || e), "إعادة");
+    });
   };
   document.getElementById("bellX").onclick = function () {
     try { localStorage.setItem("rya_bell_x", "1"); } catch (e) {}
