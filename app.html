@@ -34,6 +34,16 @@
   #ptr .card{background:#fff;color:#1B2F4F;border-radius:14px;padding:12px 16px;max-width:280px;line-height:1.7;font-size:15px}
   #ptr .arrow{font-size:60px;line-height:1;animation:bob 1s ease-in-out infinite}
   @keyframes bob{50%{transform:translateY(10px)}}
+  #nModal{position:fixed;inset:0;z-index:10;background:rgb(15 26 43 / .55);display:flex;align-items:center;justify-content:center;padding:20px}
+  #nModal[hidden]{display:none}
+  #nModal .box{background:#F8F5F1;color:#1B2433;border-radius:20px;padding:24px 20px 18px;max-width:330px;width:100%;text-align:center;box-shadow:0 18px 50px rgb(0 0 0 / .25);animation:pop .25s ease-out}
+  @keyframes pop{from{transform:scale(.9);opacity:0}}
+  #nModal .ic{font-size:44px;line-height:1}
+  #nModal h2{margin:10px 0 6px;font-size:20px;color:#1B2F4F}
+  #nModal p{margin:0 0 6px;font-size:14.5px;line-height:1.75;color:#3B4352}
+  #nModal ul{list-style:none;padding:0;margin:10px 0 16px;font-size:14px;line-height:2;color:#1B2F4F;text-align:right;display:inline-block}
+  #nModal .go{font:inherit;font-weight:700;font-size:16px;border:0;border-radius:12px;padding:13px;width:100%;background:#1B2F4F;color:#fff;cursor:pointer}
+  #nModal .skip{font:inherit;font-size:14px;border:0;background:transparent;color:#6A7180;padding:12px;width:100%;cursor:pointer}
 </style>
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 </head>
@@ -54,6 +64,17 @@
   <span id="bellTxt">🔔 فعّل التنبيهات عشان يوصلك إشعار أول ما يجهز طلبك</span>
   <button id="bellOn" type="button">فعّل</button>
   <button id="bellX" class="x" type="button" aria-label="إخفاء">✕</button>
+</div>
+<!-- نافذة تفعيل الإشعارات: تطلع كل ما يفتح التطبيق لين يفعّلها -->
+<div id="nModal" hidden role="dialog" aria-modal="true" aria-labelledby="nTitle">
+  <div class="box">
+    <div class="ic">🔔</div>
+    <h2 id="nTitle">فعّل التنبيهات</h2>
+    <p>عشان ما يفوتك شي من Rya coffee:</p>
+    <ul><li>☕ لما يجهز طلبك</li><li>🎉 عروضنا الجديدة</li><li>💎 لما تنضاف لك نقاط</li></ul>
+    <button type="button" class="go" id="nGo">فعّل التنبيهات</button>
+    <button type="button" class="skip" id="nSkip">تخطّي</button>
+  </div>
 </div>
 <!-- نسخة التطبيق من بطاقة ولاء Rya: تعرض نظام الولاء من Google Apps Script بأيقونة Rya -->
 <div id="frameWrap"><iframe id="rya" title="Rya coffee" allow="autoplay; clipboard-write"></iframe></div>
@@ -82,14 +103,21 @@
     b.hidden = !btn; if (btn) b.textContent = btn;
     document.getElementById("bell").hidden = false;
   }
+  var modalSkipped = false;
+  function showModal() {
+    if (modalSkipped) return;
+    try { if (sessionStorage.getItem("rya_nskip") === "1") return; } catch (e) {}
+    document.getElementById("nModal").hidden = false;
+  }
+  function hideModal() { document.getElementById("nModal").hidden = true; }
   function updateBell() {
     var bell = document.getElementById("bell");
-    var hidden = false; try { hidden = localStorage.getItem("rya_bell_x") === "1"; } catch (e) {}
+    var hidden = false; try { hidden = localStorage.getItem("rya_bell_x") === "1" && Notification.permission !== "default"; } catch (e) {}
     if (hidden || (iosDevice && !standaloneApp) || !("Notification" in window) || !("serviceWorker" in navigator)) { bell.hidden = true; return; }
     var perm = Notification.permission;
     if (perm === "granted") { bell.hidden = true; return; }
     if (perm === "denied") { bellMsg("🔕 التنبيهات مقفولة لهذا التطبيق. عشان تفعّلها: احذف أيقونة Rya وأضفها من جديد.", ""); return; }
-    bellMsg("🔔 فعّل التنبيهات عشان يوصلك إشعار أول ما يجهز طلبك", "فعّل");
+    bell.hidden = true; showModal();
   }
   if (ONESIGNAL_APP_ID && ONESIGNAL_APP_ID.indexOf("ضع_هنا") !== 0) {
     OneSignalDeferred.push(async function (OneSignal) {
@@ -157,6 +185,11 @@
       if (e === null) return;
       bellMsg("تعذّر ربط التنبيهات: " + ((e && e.message) || e), "إعادة");
     });
+  };
+  document.getElementById("nGo").onclick = function () { hideModal(); document.getElementById("bellOn").onclick(); };
+  document.getElementById("nSkip").onclick = function () {
+    modalSkipped = true; try { sessionStorage.setItem("rya_nskip", "1"); } catch (e) {}
+    hideModal();
   };
   document.getElementById("bellX").onclick = function () {
     try { localStorage.setItem("rya_bell_x", "1"); } catch (e) {}
