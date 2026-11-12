@@ -113,7 +113,20 @@
   var iosDevice = /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
   function linkUser() {
     if (!osReady || !t) return;
-    OneSignalDeferred.push(function (OneSignal) { OneSignal.login(t); });
+    OneSignalDeferred.push(function (OneSignal) {
+      OneSignal.login(t);
+      setTimeout(reportPush, 3000);
+    });
+  }
+  // نبلّغ لوحة الإدارة إن هذا الزبون مفعّل التنبيهات (مرة وحدة كل فتحة)
+  var reported = "";
+  function reportPush() {
+    try {
+      var sub = window.OneSignal && OneSignal.User && OneSignal.User.PushSubscription;
+      if (!t || !sub || !sub.id || !sub.optedIn || reported === t) return;
+      reported = t;
+      fetch(EXEC + "?pushok=1&t=" + t, { mode: "no-cors" }).catch(function () {});
+    } catch (e) {}
   }
   function bellMsg(text, btn) {
     document.getElementById("bellTxt").innerHTML = text;
