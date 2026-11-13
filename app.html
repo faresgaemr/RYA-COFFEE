@@ -29,10 +29,25 @@
   #inst b{font-weight:700}
   #inst button{font:inherit;font-weight:700;border:0;border-radius:9px;padding:8px 14px;background:#1B2F4F;color:#fff;cursor:pointer}
   #inst .x{background:transparent;color:#1B2F4F;padding:8px}
-  #ptr{position:fixed;inset:0;z-index:9;background:rgb(15 26 43 / .6);display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));color:#fff;text-align:center;gap:8px}
+  #ptr{position:fixed;inset:0;z-index:9;background:rgb(15 26 43 / .62);display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;padding:16px 14px calc(6px + env(safe-area-inset-bottom,0px));color:#fff;text-align:center}
+  #ptr.top{flex-direction:column-reverse;justify-content:flex-end;padding-top:calc(6px + env(safe-area-inset-top,0px))}
   #ptr[hidden]{display:none}
-  #ptr .card{background:#fff;color:#1B2F4F;border-radius:14px;padding:12px 16px;max-width:280px;line-height:1.7;font-size:15px}
-  #ptr .arrow{font-size:60px;line-height:1;animation:bob 1s ease-in-out infinite}
+  #ptr .sheet{background:#F8F5F1;color:#1B2433;border-radius:20px;padding:18px 16px 8px;max-width:340px;width:100%;box-shadow:0 18px 50px rgb(0 0 0 / .3);animation:pop .25s ease-out}
+  #ptr .hd{display:flex;align-items:center;gap:12px;text-align:right;margin-bottom:12px}
+  #ptr .hd img{width:52px;height:52px;border-radius:13px;box-shadow:0 4px 12px rgb(27 47 79 / .2)}
+  #ptr .hd h3{margin:0;font-size:17px;color:#1B2F4F}
+  #ptr .hd small{color:#6A7180;font-size:13px}
+  #ptr ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+  #ptr li{display:flex;align-items:center;gap:10px;background:#fff;border:2px solid #E6DFD8;border-radius:14px;padding:10px 12px;text-align:right;font-size:14.5px;line-height:1.6;transition:border-color .3s,transform .3s}
+  #ptr li.on{border-color:#1B2F4F;transform:scale(1.02)}
+  #ptr li .n{flex:none;width:26px;height:26px;border-radius:50%;background:#1B2F4F;color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px}
+  #ptr li .t{flex:1;min-width:0}
+  #ptr li .ico{flex:none;width:42px;height:42px;border-radius:10px;background:#EEF1F6;color:#0A7AFF;display:grid;place-items:center}
+  #ptr li .ico svg{width:24px;height:24px}
+  #ptr li .ico.txt{width:auto;padding:0 10px;font-weight:700;font-size:15px}
+  #ptr .note{margin:10px 2px 0;font-size:12.5px;color:#6A7180;line-height:1.6}
+  #ptr .later{font:inherit;font-size:14px;border:0;background:transparent;color:#6A7180;padding:10px;width:100%;cursor:pointer}
+  #ptr .arrow{font-size:46px;line-height:1;animation:bob 1s ease-in-out infinite;text-shadow:0 2px 8px rgb(0 0 0 / .4)}
   @keyframes bob{50%{transform:translateY(10px)}}
   #iModal{position:fixed;inset:0;z-index:11;background:rgb(15 26 43 / .55);display:flex;align-items:center;justify-content:center;padding:20px}
   #iModal[hidden]{display:none}
@@ -41,7 +56,6 @@
   #iModal p{margin:0 0 16px;font-size:14.5px;line-height:1.75;color:#3B4352}
   #iModal .go{font:inherit;font-weight:700;font-size:16px;border:0;border-radius:12px;padding:13px;width:100%;background:#1B2F4F;color:#fff;cursor:pointer}
   #iModal .skip{font:inherit;font-size:14px;border:0;background:transparent;color:#6A7180;padding:12px;width:100%;cursor:pointer}
-  #ptr .card h3{margin:0 0 6px;font-size:17px}
   #nModal{position:fixed;inset:0;z-index:10;background:rgb(15 26 43 / .55);display:flex;align-items:center;justify-content:center;padding:20px}
   #nModal[hidden]{display:none}
   #nModal .box{background:#F8F5F1;color:#1B2433;border-radius:20px;padding:24px 20px 18px;max-width:330px;width:100%;text-align:center;box-shadow:0 18px 50px rgb(0 0 0 / .25);animation:pop .25s ease-out}
@@ -78,9 +92,17 @@
   <button id="instX" class="x" type="button" aria-label="إخفاء">✕</button>
 </div>
 <div id="ptr" hidden>
-  <div class="card"><h3>📲 ثبّت تطبيق Rya</h3>1. اضغط زر المشاركة <b>⬆︎</b> اللي تحت<br><small>(إذا ما شفته: اضغط <b>⋯</b> وبعدها «مشاركة»)</small><br>2. اختر <b>«إضافة إلى الشاشة الرئيسية»</b><br>3. اضغط <b>«إضافة»</b></div>
-  <div class="arrow">⬇</div>
-  <small style="opacity:.85">اضغط في أي مكان عشان يختفي</small>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="ptrT">
+    <div class="hd"><img src="rya-icon.png" alt=""><div><h3 id="ptrT">ثبّت تطبيق Rya</h3><small>٣ خطوات بس، وتصير الأيقونة على شاشتك</small></div></div>
+    <ol>
+      <li id="st1"><span class="n">1</span><span class="t" id="st1t">اضغط زر <b>المشاركة</b> تحت</span><span class="ico" id="st1i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg></span></li>
+      <li id="st2"><span class="n">2</span><span class="t">انزل شوي واختر <b>«إضافة إلى الشاشة الرئيسية»</b></span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M12 8v8M8 12h8"/></svg></span></li>
+      <li id="st3"><span class="n">3</span><span class="t">اضغط <b>«إضافة»</b> فوق، وخلاص ✅</span><span class="ico txt">إضافة</span></li>
+    </ol>
+    <p class="note" id="ptrNote"></p>
+    <button type="button" class="later" id="ptrLater">لاحقاً</button>
+  </div>
+  <div class="arrow" id="ptrArrow">⬇</div>
 </div>
 <!-- شريط تفعيل الإشعارات (يطلع بس إذا الجوال يدعمها وما تفعّلت) -->
 <div id="bell" hidden>
@@ -270,57 +292,103 @@
     document.getElementById("instBtn").textContent = btn;
     document.getElementById("inst").hidden = false;
   }
-  // أندرويد: نافذة التثبيت الحقيقية
-  var wantInstall = !standaloneNow && /Android|iPhone|iPad|iPod/.test(navigator.userAgent) && !/FBAN|FBAV|Instagram|Snapchat|TikTok|; wv\)/.test(navigator.userAgent);
+  var UA = navigator.userAgent;
+  var inApp = /FBAN|FBAV|Instagram|Snapchat|TikTok|Line\/|MicroMessenger|; wv\)/.test(UA);
+  var isIPad = /iPad/.test(UA) || (/Macintosh/.test(UA) && navigator.maxTouchPoints > 1);
+  var otherIOSBrowser = isIOS && /CriOS|FxiOS|EdgiOS/.test(UA);
+  var safariVer = parseInt((UA.match(/Version\/(\d+)/) || [])[1] || "0", 10);
+  var wantInstall = !standaloneNow && (/Android|iPhone|iPad|iPod/.test(UA) || isIPad);
   function iSkipped() { try { return sessionStorage.getItem("rya_iskip") === "1"; } catch (e) { return false; } }
-  function openInstallModal(text, btn) {
+  function skipForNow() { try { sessionStorage.setItem("rya_iskip", "1"); } catch (e) {} }
+  var iMode = "";
+  function openInstallModal(text, btn, mode) {
     if (!wantInstall || iSkipped()) return;
-    installUI = true; document.getElementById("nModal").hidden = true;
+    installUI = true; iMode = mode || ""; document.getElementById("nModal").hidden = true;
     if (text) document.getElementById("iTxt").innerHTML = text;
     if (btn) document.getElementById("iGo").textContent = btn;
     document.getElementById("iModal").hidden = false;
   }
   function closeInstallModal() { document.getElementById("iModal").hidden = true; installUI = false; }
+
+  // دليل التثبيت المصوّر (آيفون/آيباد)
+  var stepTimer = null;
+  function setupGuide() {
+    var t1 = document.getElementById("st1t"), note = document.getElementById("ptrNote"), ptr = document.getElementById("ptr");
+    var top = isIPad || otherIOSBrowser;
+    if (otherIOSBrowser) {
+      t1.innerHTML = "اضغط زر <b>المشاركة</b> فوق جنب الرابط";
+    } else if (isIPad) {
+      t1.innerHTML = "اضغط زر <b>المشاركة</b> فوق";
+    } else if (safariVer >= 26) {
+      t1.innerHTML = "اضغط زر <b>•••</b> تحت، بعدها <b>«مشاركة»</b>";
+      document.getElementById("st1i").outerHTML = '<span class="ico txt" id="st1i">•••</span>';
+    }
+    var notes = [];
+    if (!top) notes.push("لو شريط الرابط عندك فوق، بتلقى الزر فوق.");
+    if (safariVer >= 26) notes.push("خلّ خيار «فتح كتطبيق ويب» مفعّل.");
+    notes.push("لازم تثبّته من هذي الصفحة عشان يطلع شعار Rya.");
+    note.textContent = notes.join(" ");
+    ptr.classList.toggle("top", top);
+    document.getElementById("ptrArrow").textContent = top ? "⬆" : "⬇";
+  }
+  function showGuide() {
+    var ptr = document.getElementById("ptr"), i = 0;
+    installUI = true; document.getElementById("nModal").hidden = true;
+    ptr.hidden = false;
+    var ids = ["st1", "st2", "st3"];
+    function tick() { ids.forEach(function (id, k) { document.getElementById(id).classList.toggle("on", k === i); }); i = (i + 1) % 3; }
+    tick(); clearInterval(stepTimer); stepTimer = setInterval(tick, 1600);
+  }
+  function hideGuide() { document.getElementById("ptr").hidden = true; clearInterval(stepTimer); installUI = false; }
+  if (isIOS) setupGuide();
+
+  // أندرويد: نافذة التثبيت الحقيقية
   window.addEventListener("beforeinstallprompt", function (e) {
     e.preventDefault(); deferredInstall = e;
     showInst('📲 ثبّت تطبيق <b>Rya</b> على جوالك', "تثبيت");
     openInstallModal("", "📲 تثبيت");
   });
-  // أندرويد بدون نافذة تثبيت تلقائية (متصفح سامسونج وغيره): نشرح الخطوة
-  if (wantInstall && !isIOS) setTimeout(function () {
-    if (!deferredInstall) openInstallModal('اضغط زر القائمة <b>⋮</b> أو <b>≡</b> في المتصفح، واختر <b>«إضافة إلى الشاشة الرئيسية»</b> أو <b>«تثبيت التطبيق»</b>.', "تمام");
-  }, 2500);
-  // آيفون Safari: نوريه زر المشاركة على طول
-  if (wantInstall && isIOSSafari && !iSkipped()) {
+  if (wantInstall && inApp) {
+    // فتح من إنستقرام/سناب/تيك توك…: التثبيت ما يشتغل داخلها
+    if (isIOS) openInstallModal('أنت فاتح الرابط من داخل تطبيق ثاني. عشان تثبّت Rya: اضغط <b>⋯</b> أو <b>⬆</b> واختر <b>«فتح في Safari»</b>، أو انسخ الرابط والصقه في Safari.', "📋 نسخ الرابط", "copy");
+    else openInstallModal('أنت فاتح الرابط من داخل تطبيق ثاني. افتحه في <b>Chrome</b> عشان تقدر تثبّت تطبيق Rya.', "🌐 افتح في Chrome", "chrome");
+  } else if (wantInstall && !isIOS) {
+    // أندرويد بدون نافذة تثبيت تلقائية (متصفح سامسونج وغيره): نشرح الخطوة
+    setTimeout(function () {
+      if (!deferredInstall) openInstallModal('اضغط زر القائمة <b>⋮</b> أو <b>≡</b> في المتصفح، واختر <b>«إضافة إلى الشاشة الرئيسية»</b> أو <b>«تثبيت التطبيق»</b>.', "تمام");
+    }, 2500);
+  } else if (wantInstall && isIOS && !iSkipped()) {
+    // آيفون: Apple ما تسمح بزر تثبيت، فنوريه الخطوات بالصور
     installUI = true;
-    setTimeout(function () { document.getElementById("ptr").hidden = false; }, 600);
+    setTimeout(showGuide, 600);
   }
-  if (wantInstall && isIOS && !isIOSSafari) openInstallModal('الآيفون يسمح بالتثبيت من <b>Safari</b> بس. انسخ الرابط وافتحه في Safari، أو اضغط <b>⋯</b> واختر «فتح في Safari».', "تمام");
+  function copyLink(btn) {
+    var url = location.href;
+    function done() { btn.textContent = "✅ تم النسخ، الصقه في Safari"; }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, function () { prompt("انسخ الرابط:", url); });
+    else prompt("انسخ الرابط:", url);
+  }
   document.getElementById("iGo").onclick = function () {
+    if (iMode === "copy") { copyLink(this); return; }
+    if (iMode === "chrome") { location.href = "intent://" + location.host + location.pathname + location.search + "#Intent;scheme=https;package=com.android.chrome;end"; return; }
     if (deferredInstall) {
       deferredInstall.prompt();
       deferredInstall.userChoice.then(function (c) { if (c.outcome === "accepted") { document.getElementById("inst").hidden = true; } deferredInstall = null; });
     }
     closeInstallModal();
   };
-  document.getElementById("iSkip").onclick = function () {
-    try { sessionStorage.setItem("rya_iskip", "1"); } catch (e) {}
-    closeInstallModal(); updateBell();
-  };
+  document.getElementById("iSkip").onclick = function () { skipForNow(); closeInstallModal(); updateBell(); };
   window.addEventListener("appinstalled", function () { document.getElementById("inst").hidden = true; });
-  // آيفون (Safari): Apple ما تسمح بزر تثبيت، فنأشّر على زر المشاركة
-  if (isIOSSafari) showInst('📲 أضف <b>Rya</b> لشاشتك الرئيسية', "وريني");
-  else if (isIOS) showInst('📲 افتح الصفحة في <b>Safari</b> عشان تقدر تضيفها لشاشتك', "تمام");
+  if (isIOS && !inApp) showInst('📲 أضف <b>Rya</b> لشاشتك الرئيسية', "وريني كيف");
   document.getElementById("instBtn").onclick = function () {
     if (deferredInstall) {
       deferredInstall.prompt();
       deferredInstall.userChoice.then(function (c) { if (c.outcome === "accepted") document.getElementById("inst").hidden = true; deferredInstall = null; });
-    } else if (isIOSSafari) {
-      var p = document.getElementById("ptr"); p.hidden = false;
-      clearTimeout(p._t); p._t = setTimeout(function () { p.hidden = true; }, 10000);
-    } else { document.getElementById("inst").hidden = true; }
+    } else if (isIOS && !inApp) showGuide();
+    else document.getElementById("inst").hidden = true;
   };
-  document.getElementById("ptr").onclick = function () { this.hidden = true; installUI = false; };
+  document.getElementById("ptr").onclick = function (e) { if (!e.target.closest(".sheet")) hideGuide(); };
+  document.getElementById("ptrLater").onclick = function () { skipForNow(); hideGuide(); updateBell(); };
   document.getElementById("instX").onclick = function () {
     try { localStorage.setItem("rya_inst_x", "1"); } catch (e) {}
     document.getElementById("inst").hidden = true;
