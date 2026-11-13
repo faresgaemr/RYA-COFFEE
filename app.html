@@ -293,6 +293,10 @@
     document.getElementById("inst").hidden = false;
   }
   var UA = navigator.userAgent;
+  // متصفح سامسونج يغلّف التطبيق بطريقة قديمة فيطلّع تحذير «تطبيق غير آمن» من Play Protect، فنثبّت من Chrome بدالها
+  var isSamsung = /SamsungBrowser/.test(UA);
+  function openInChrome() { location.href = "intent://" + location.host + location.pathname + location.search + "#Intent;scheme=https;package=com.android.chrome;end"; }
+  function samsungModal() { openInstallModal('عشان يتثبّت تطبيق <b>Rya</b> بدون تحذيرات، افتح الرابط في <b>Chrome</b> واضغط «تثبيت» من هناك.', "🌐 افتح في Chrome", "chrome"); }
   var inApp = /FBAN|FBAV|Instagram|Snapchat|TikTok|Line\/|MicroMessenger|; wv\)/.test(UA);
   var isIPad = /iPad/.test(UA) || (/Macintosh/.test(UA) && navigator.maxTouchPoints > 1);
   var otherIOSBrowser = isIOS && /CriOS|FxiOS|EdgiOS/.test(UA);
@@ -344,7 +348,9 @@
 
   // أندرويد: نافذة التثبيت الحقيقية
   window.addEventListener("beforeinstallprompt", function (e) {
-    e.preventDefault(); deferredInstall = e;
+    e.preventDefault();
+    if (isSamsung) { showInst('📲 ثبّت تطبيق <b>Rya</b> من Chrome', "افتح"); samsungModal(); return; }
+    deferredInstall = e;
     showInst('📲 ثبّت تطبيق <b>Rya</b> على جوالك', "تثبيت");
     openInstallModal("", "📲 تثبيت");
   });
@@ -352,8 +358,11 @@
     // فتح من إنستقرام/سناب/تيك توك…: التثبيت ما يشتغل داخلها
     if (isIOS) openInstallModal('أنت فاتح الرابط من داخل تطبيق ثاني. عشان تثبّت Rya: اضغط <b>⋯</b> أو <b>⬆</b> واختر <b>«فتح في Safari»</b>، أو انسخ الرابط والصقه في Safari.', "📋 نسخ الرابط", "copy");
     else openInstallModal('أنت فاتح الرابط من داخل تطبيق ثاني. افتحه في <b>Chrome</b> عشان تقدر تثبّت تطبيق Rya.', "🌐 افتح في Chrome", "chrome");
+  } else if (wantInstall && isSamsung) {
+    showInst('📲 ثبّت تطبيق <b>Rya</b> من Chrome', "افتح");
+    setTimeout(samsungModal, 1200);
   } else if (wantInstall && !isIOS) {
-    // أندرويد بدون نافذة تثبيت تلقائية (متصفح سامسونج وغيره): نشرح الخطوة
+    // أندرويد بدون نافذة تثبيت تلقائية: نشرح الخطوة
     setTimeout(function () {
       if (!deferredInstall) openInstallModal('اضغط زر القائمة <b>⋮</b> أو <b>≡</b> في المتصفح، واختر <b>«إضافة إلى الشاشة الرئيسية»</b> أو <b>«تثبيت التطبيق»</b>.', "تمام");
     }, 2500);
@@ -381,6 +390,7 @@
   window.addEventListener("appinstalled", function () { document.getElementById("inst").hidden = true; });
   if (isIOS && !inApp) showInst('📲 أضف <b>Rya</b> لشاشتك الرئيسية', "وريني كيف");
   document.getElementById("instBtn").onclick = function () {
+    if (isSamsung) { openInChrome(); return; }
     if (deferredInstall) {
       deferredInstall.prompt();
       deferredInstall.userChoice.then(function (c) { if (c.outcome === "accepted") document.getElementById("inst").hidden = true; deferredInstall = null; });
