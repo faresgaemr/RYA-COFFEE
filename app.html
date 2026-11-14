@@ -7,14 +7,16 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Rya coffee">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#ECE7E1">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#13213A">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="rya-icon.png">
 <link rel="icon" type="image/png" href="rya-icon.png">
 <style>
-  html,body{margin:0;height:100%;height:100dvh;overflow:hidden;background:#F5F0E8;font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif}
-  body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box}
+  html,body{margin:0;height:100%;height:100dvh;overflow:hidden;background:#13213A;font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif}
+  body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box;background:linear-gradient(#13213A 0 50%,var(--bot,#F5F0E8) 50% 100%)}
+  body.dk{--bot:#0A1220}
+  @media (prefers-color-scheme:dark){body:not(.lt){--bot:#0A1220}}
   #off{position:fixed;inset:0;z-index:21;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center;background:#F5F0E8;color:#1B2F4F}
   #off[hidden]{display:none}
   #off img{width:84px;height:84px;border-radius:50%}
@@ -174,7 +176,8 @@
   function hideSplash() { var sp = document.getElementById("splash"); if (!sp || sp.className) return; setTimeout(function () { sp.className = "out"; }, Math.max(0, 700 - (Date.now() - splashT0))); }
   setTimeout(hideSplash, 8000);
   var frameReady = false;
-  function loadFrame() { document.getElementById("rya").src = EXEC + "?w=1" + (t ? "&t=" + t : ""); }
+  var ref = (params.get("ref") || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
+  function loadFrame() { document.getElementById("rya").src = EXEC + "?w=1" + (t ? "&t=" + t : "") + (ref ? "&ref=" + ref : ""); }
   // بدون إنترنت: نوري الزبون رسالة واضحة بدل صفحة فاضية
   function checkOnline() { var off = !navigator.onLine && !frameReady; document.getElementById("off").hidden = !off; if (off) hideSplash(); }
   document.getElementById("offRetry").onclick = function () { if (navigator.onLine) { document.getElementById("off").hidden = true; loadFrame(); } };
@@ -435,6 +438,7 @@
   window.addEventListener("message", function (e) {
     var host = ""; try { host = new URL(e.origin).hostname; } catch (x) {}
     if (!/\.googleusercontent\.com$/.test(host)) return;
+    if (e.data && e.data.rya_theme) { document.body.classList.toggle("dk", e.data.rya_theme === "dark"); document.body.classList.toggle("lt", e.data.rya_theme === "light"); return; }
     if (e.data && e.data.rya_ready) { frameReady = true; document.getElementById("off").hidden = true; hideSplash(); return; }
     if (!e.data || typeof e.data.rya_t !== "string") return;
     var nt = e.data.rya_t.replace(/[^a-f0-9]/g, "");

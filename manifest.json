@@ -5,8 +5,8 @@
   "start_url": "/RYA-COFFEE/app.html",
   "scope": "/RYA-COFFEE/",
   "display": "standalone",
-  "background_color": "#ECE7E1",
-  "theme_color": "#ECE7E1",
+  "background_color": "#13213A",
+  "theme_color": "#13213A",
   "icons": [
     {
       "src": "/RYA-COFFEE/rya-icon.png",
