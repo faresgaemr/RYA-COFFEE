@@ -83,20 +83,31 @@
   #nModal .go{font:inherit;font-weight:700;font-size:16px;border:0;border-radius:12px;padding:13px;width:100%;background:#1B2F4F;color:#fff;cursor:pointer}
   #nModal .skip{font:inherit;font-size:14px;border:0;background:transparent;color:#6A7180;padding:12px;width:100%;cursor:pointer}
   /* زر التواصل العائم */
-  #cBtn{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:6;width:58px;height:58px;border-radius:50%;border:0;background:#25D366;color:#fff;display:grid;place-items:center;cursor:pointer;box-shadow:0 6px 18px rgb(0 0 0 / .25);-webkit-tap-highlight-color:transparent}
-  #cBtn::before{content:"";position:absolute;inset:-8px;border-radius:50%;border:2px solid rgb(37 211 102 / .45);animation:ring 2.2s ease-out infinite}
-  @keyframes ring{0%{transform:scale(.85);opacity:1}100%{transform:scale(1.35);opacity:0}}
-  #cBtn svg{width:28px;height:28px}
-  #cSheet{position:fixed;inset:0;z-index:12;background:rgb(15 26 43 / .45);display:flex;align-items:flex-end;justify-content:center}
+  /* زر التواصل: صغير وأنيق تحت يسار، ويرتفع لما تطلع سلة الطلب */
+  #cBtn{position:fixed;left:calc(16px + env(safe-area-inset-left,0px));bottom:calc(22px + env(safe-area-inset-bottom,0px));z-index:6;width:52px;height:52px;border-radius:50%;border:1.5px solid #D9BE8C;
+    background:radial-gradient(circle at 30% 25%,#2A4470,#13213A 70%);color:#F3D58A;display:grid;place-items:center;cursor:pointer;
+    box-shadow:0 10px 24px rgb(10 18 32 / .35),inset 0 1px 0 rgb(255 255 255 / .15);-webkit-tap-highlight-color:transparent;transition:bottom .3s cubic-bezier(.2,.8,.2,1),transform .15s,opacity .3s}
+  #cBtn:active{transform:scale(.92)}
+  #cBtn.up{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+  #cBtn::before{content:"";position:absolute;inset:-6px;border-radius:50%;border:1.5px solid rgb(217 190 140 / .55);animation:ring 2.4s ease-out 3}
+  #cBtn::after{content:"";position:absolute;top:2px;right:2px;width:11px;height:11px;border-radius:50%;background:#25D366;border:2px solid #13213A}
+  @keyframes ring{0%{transform:scale(.9);opacity:1}100%{transform:scale(1.4);opacity:0}}
+  @media (prefers-reduced-motion:reduce){#cBtn::before{animation:none;opacity:0}}
+  #cBtn svg{width:24px;height:24px}
+  #cSheet{position:fixed;inset:0;z-index:12;background:rgb(8 14 26 / .55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center}
   #cSheet[hidden]{display:none}
-  #cSheet .box{background:#F8F5F1;color:#1B2433;width:100%;max-width:420px;border-radius:20px 20px 0 0;padding:20px 20px calc(18px + env(safe-area-inset-bottom,0px));text-align:center;animation:up .22s ease-out}
-  @keyframes up{from{transform:translateY(40px);opacity:.5}}
-  #cSheet h2{margin:0 0 4px;font-size:19px;color:#1B2F4F}
-  #cSheet .num{direction:ltr;font-size:20px;font-weight:700;color:#1B2F4F;margin:6px 0 16px;letter-spacing:.5px}
-  #cSheet a{display:flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;font-weight:700;font-size:16px;border-radius:12px;padding:13px;margin-top:10px}
-  #cSheet .wa{background:#25D366;color:#fff}
-  #cSheet .call{background:#1B2F4F;color:#fff}
-  #cSheet .close{font:inherit;font-size:14px;border:0;background:transparent;color:#6A7180;padding:12px;width:100%;margin-top:4px;cursor:pointer}
+  #cSheet .box{position:relative;color:#FFF6E3;width:100%;max-width:440px;border-radius:26px 26px 0 0;padding:14px 20px calc(16px + env(safe-area-inset-bottom,0px));text-align:center;animation:up .28s cubic-bezier(.2,.8,.2,1);
+    background:radial-gradient(420px 220px at 100% 0,rgb(217 190 140 / .22),transparent 60%),linear-gradient(160deg,#1D3355,#0E1A2E);box-shadow:0 -10px 40px rgb(0 0 0 / .35),inset 0 1px 0 rgb(217 190 140 / .35)}
+  #cSheet .box::before{content:"";display:block;width:42px;height:4px;border-radius:9px;background:rgb(217 190 140 / .45);margin:0 auto 14px}
+  @keyframes up{from{transform:translateY(60px);opacity:.4}}
+  #cSheet .logo{width:64px;height:64px;border-radius:50%;box-shadow:0 0 0 1.5px #D9BE8C,0 8px 20px rgb(0 0 0 / .4)}
+  #cSheet h2{margin:10px 0 2px;font-size:20px;color:#FFF6E3}
+  #cSheet .sub{color:#CBBFA9;font-size:14px}
+  #cSheet .num{direction:ltr;font-size:22px;font-weight:700;color:#F3D58A;margin:8px 0 14px;letter-spacing:1.5px}
+  #cSheet a{display:flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;font-weight:700;font-size:16px;border-radius:14px;padding:14px;margin-top:10px}
+  #cSheet .wa{background:linear-gradient(180deg,#2BD06A,#1FAF55);color:#fff;box-shadow:0 8px 18px rgb(31 175 85 / .3)}
+  #cSheet .call{background:linear-gradient(135deg,#F3D58A,#C9A15C);color:#13213A}
+  #cSheet .close{font:inherit;font-size:14px;border:0;background:transparent;color:#CBBFA9;padding:12px;width:100%;margin-top:4px;cursor:pointer}
 </style>
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 </head>
@@ -154,8 +165,9 @@
 <button type="button" id="cBtn" aria-label="تواصل معنا"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg></button>
 <div id="cSheet" hidden role="dialog" aria-modal="true" aria-labelledby="cTitle">
   <div class="box">
+    <img class="logo" src="rya-icon.png" alt="">
     <h2 id="cTitle">تواصل معنا</h2>
-    <div style="color:#6A7180;font-size:14px">Rya coffee ☕ نخدمك بكل حب</div>
+    <div class="sub">Rya coffee ☕ نخدمك بكل حب</div>
     <div class="num">053 209 1333</div>
     <a class="wa" href="https://wa.me/966532091333?text=%D8%A7%D9%84%D8%B3%D9%84%D8%A7%D9%85%20%D8%B9%D9%84%D9%8A%D9%83%D9%85%20Rya%20coffee" target="_blank" rel="noopener">💬 راسلنا واتساب</a>
     <a class="call" href="tel:+966532091333"><svg viewBox="0 0 24 24" fill="currentColor" style="width:20px;height:20px" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg> اتصل علينا</a>
@@ -438,6 +450,7 @@
   window.addEventListener("message", function (e) {
     var host = ""; try { host = new URL(e.origin).hostname; } catch (x) {}
     if (!/\.googleusercontent\.com$/.test(host)) return;
+    if (e.data && typeof e.data.rya_cart === "boolean") { document.getElementById("cBtn").classList.toggle("up", e.data.rya_cart); return; }
     if (e.data && e.data.rya_theme) { document.body.classList.toggle("dk", e.data.rya_theme === "dark"); document.body.classList.toggle("lt", e.data.rya_theme === "light"); return; }
     if (e.data && e.data.rya_ready) { frameReady = true; document.getElementById("off").hidden = true; hideSplash(); return; }
     if (!e.data || typeof e.data.rya_t !== "string") return;
