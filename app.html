@@ -14,7 +14,12 @@
 <link rel="icon" type="image/png" href="rya-icon.png">
 <style>
   html,body{margin:0;height:100%;height:100dvh;overflow:hidden;background:#F5F0E8;font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif}
-  body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);box-sizing:border-box}
+  body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box}
+  #off{position:fixed;inset:0;z-index:21;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center;background:#F5F0E8;color:#1B2F4F}
+  #off[hidden]{display:none}
+  #off img{width:84px;height:84px;border-radius:50%}
+  #off p{margin:0;color:#6A7180;line-height:1.8}
+  #off button{font:inherit;font-weight:700;border:0;border-radius:12px;padding:12px 26px;background:#1B2F4F;color:#fff;cursor:pointer}
   #bell{display:flex;align-items:center;gap:10px;background:#1B2F4F;color:#fff;padding:10px 14px;font-size:14px;line-height:1.5}
   #bell[hidden]{display:none}
   #bell span{flex:1}
@@ -95,6 +100,7 @@
 </head>
 <body>
 <div id="splash" aria-hidden="true"><img src="rya-icon.png" alt=""><b>RYA COFFEE</b><i></i></div>
+<div id="off" hidden role="alert"><img src="rya-icon.png" alt=""><h2 style="margin:0">ما فيه اتصال بالإنترنت</h2><p>تأكد من الواي فاي أو البيانات، وبعدها اضغط «إعادة المحاولة».</p><button type="button" id="offRetry">إعادة المحاولة</button></div>
 <!-- شريط حفظ التطبيق على الشاشة الرئيسية -->
 <div id="inst" hidden>
   <span id="instTxt">📲 ثبّت تطبيق <b>Rya</b> على جوالك</span>
@@ -167,7 +173,14 @@
   var splashT0 = Date.now();
   function hideSplash() { var sp = document.getElementById("splash"); if (!sp || sp.className) return; setTimeout(function () { sp.className = "out"; }, Math.max(0, 700 - (Date.now() - splashT0))); }
   setTimeout(hideSplash, 8000);
-  document.getElementById("rya").src = EXEC + "?w=1" + (t ? "&t=" + t : "");
+  var frameReady = false;
+  function loadFrame() { document.getElementById("rya").src = EXEC + "?w=1" + (t ? "&t=" + t : ""); }
+  // بدون إنترنت: نوري الزبون رسالة واضحة بدل صفحة فاضية
+  function checkOnline() { var off = !navigator.onLine && !frameReady; document.getElementById("off").hidden = !off; if (off) hideSplash(); }
+  document.getElementById("offRetry").onclick = function () { if (navigator.onLine) { document.getElementById("off").hidden = true; loadFrame(); } };
+  window.addEventListener("online", function () { if (!frameReady) { document.getElementById("off").hidden = true; loadFrame(); } });
+  window.addEventListener("offline", checkOnline);
+  if (navigator.onLine) loadFrame(); else checkOnline();
 
   // ---- الإشعارات (OneSignal) ----
   var osReady = false, osError = "";
@@ -422,7 +435,7 @@
   window.addEventListener("message", function (e) {
     var host = ""; try { host = new URL(e.origin).hostname; } catch (x) {}
     if (!/\.googleusercontent\.com$/.test(host)) return;
-    if (e.data && e.data.rya_ready) { hideSplash(); return; }
+    if (e.data && e.data.rya_ready) { frameReady = true; document.getElementById("off").hidden = true; hideSplash(); return; }
     if (!e.data || typeof e.data.rya_t !== "string") return;
     var nt = e.data.rya_t.replace(/[^a-f0-9]/g, "");
     try { if (nt) localStorage.setItem("rya_t", nt); else localStorage.removeItem("rya_t"); } catch (x) {}
