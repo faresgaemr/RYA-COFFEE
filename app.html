@@ -189,6 +189,15 @@
   @keyframes rdyUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
   @keyframes rdyHalo{from{transform:scale(1);opacity:.9}to{transform:scale(1.12,1.35);opacity:0}}
   @media (prefers-reduced-motion:reduce){#rdy .rg i,#rdy::before,#rdy *,#rdy button::after{animation:none!important}}
+  /* ===== مشاركة ملخّص الشهر ===== */
+  #shSheet{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));background:rgb(8 14 26 / .88);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+  #shSheet[hidden]{display:none}
+  #shSheet img{max-height:62vh;max-width:100%;border-radius:18px;box-shadow:0 20px 50px rgb(0 0 0 / .5);animation:pop .35s ease-out;-webkit-touch-callout:default}
+  #shSheet p{margin:0;color:#D8CCB4;font-size:13.5px;text-align:center}
+  #shSheet .row{display:flex;gap:10px;width:100%;max-width:360px}
+  #shSheet button{flex:1;font:inherit;font-weight:700;font-size:16px;border:0;border-radius:14px;padding:14px;cursor:pointer}
+  #shGo{background:linear-gradient(135deg,#F3D58A,#C9A15C);color:#13213A}
+  #shX{background:rgb(255 255 255 / .12);color:#FFF6E3}
 </style>
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 </head>
@@ -274,6 +283,7 @@
   <button type="button" id="rdyGo">في الطريق 🏃</button>
   <small>اضغط عشان توقف الرنة وينحسب طلبك مستلَم</small>
 </div>
+<div id="shSheet" hidden role="dialog" aria-modal="true" aria-label="شارك ملخّصك"><img id="shImg" alt="ملخّص شهرك في Rya coffee"><p>شاركه في السناب أو الستوري، أو اضغط مطوّل على الصورة واحفظها 📸</p><div class="row"><button type="button" id="shGo">📤 مشاركة</button><button type="button" id="shX">إغلاق</button></div></div>
 <div id="frameWrap"><iframe id="rya" title="Rya coffee" allow="autoplay; clipboard-write"></iframe></div>
 <script>
   var EXEC = "https://script.google.com/macros/s/AKfycbzlzX0oYt1o0XAChJR1vTn0quzYmQeV73WbeLYPECiQvR85zmz1BX9fTAAfhe0xh0mVBg/exec";
@@ -723,6 +733,19 @@
     paintRing();
   }
 
+  var shData = null;
+  document.getElementById("shX").onclick = function () { document.getElementById("shSheet").hidden = true; };
+  document.getElementById("shGo").onclick = function () {
+    if (!shData) return;
+    var b = this;
+    try {
+      var bin = atob(shData.img.split(",")[1]), u = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+      var f = new File([u], "rya-month.jpg", { type: "image/jpeg" });
+      if (navigator.canShare && navigator.canShare({ files: [f] })) { navigator.share({ files: [f], text: shData.text || "" }).catch(function () {}); return; }
+    } catch (x) {}
+    b.textContent = "اضغط مطوّل على الصورة واحفظها 👆";
+  };
   // صفحة الولاء ترسل رابط الدخول بعد ما يدخل الزبون، فنحفظه هنا ونربطه بالإشعارات
   window.addEventListener("message", function (e) {
     var host = ""; try { host = new URL(e.origin).hostname; } catch (x) {}
@@ -732,6 +755,17 @@
     if (e.data && e.data.rya_ord) { onOrd(e.data.rya_ord, e); return; }
     if (e.data && e.data.rya_arm) { rSrc = e.source; rOrigin = e.origin; armRing(); return; }
     // رسائل «مرة وحدة» (مثل: خلّصت تحدي الأسبوع): نحفظها هنا لأن ذاكرة صفحة الولاء تنمسح
+    // ذاكرة دائمة لصفحة الولاء (آخر مستوى، آخر رصيد…): نحفظ الجديد ونرجّع القديم
+    if (e.data && e.data.rya_kv && typeof e.data.rya_kv.k === "string") {
+      var kv = e.data.rya_kv, kk = "rya_kv_" + kv.k.slice(0, 80), old = null;
+      try { old = localStorage.getItem(kk); localStorage.setItem(kk, String(kv.v == null ? "" : kv.v).slice(0, 200)); } catch (x) {}
+      try { e.source.postMessage({ rya_kv_r: { id: kv.id, old: old } }, e.origin); } catch (x) {}
+      return;
+    }
+    // ملخّص الشهر: نعرض الصورة هنا عشان زر المشاركة يشتغل (المشاركة ما تشتغل من داخل صفحة الولاء)
+    if (e.data && e.data.rya_share && typeof e.data.rya_share.img === "string" && e.data.rya_share.img.indexOf("data:image/") === 0) {
+      shData = e.data.rya_share; document.getElementById("shImg").src = shData.img; document.getElementById("shSheet").hidden = false; return;
+    }
     if (e.data && typeof e.data.rya_once === "string") {
       var ok1 = false, k1 = "rya_once_" + e.data.rya_once.slice(0, 60);
       try { ok1 = localStorage.getItem(k1) !== "1"; localStorage.setItem(k1, "1"); } catch (x) { ok1 = false; }
