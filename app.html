@@ -758,7 +758,7 @@
     // ذاكرة دائمة لصفحة الولاء (آخر مستوى، آخر رصيد…): نحفظ الجديد ونرجّع القديم
     if (e.data && e.data.rya_kv && typeof e.data.rya_kv.k === "string") {
       var kv = e.data.rya_kv, kk = "rya_kv_" + kv.k.slice(0, 80), old = null;
-      try { old = localStorage.getItem(kk); localStorage.setItem(kk, String(kv.v == null ? "" : kv.v).slice(0, 200)); } catch (x) {}
+      try { old = localStorage.getItem(kk); if (!kv.get) localStorage.setItem(kk, String(kv.v == null ? "" : kv.v).slice(0, 200)); } catch (x) {}
       try { e.source.postMessage({ rya_kv_r: { id: kv.id, old: old } }, e.origin); } catch (x) {}
       return;
     }
