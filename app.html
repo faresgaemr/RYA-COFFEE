@@ -549,8 +549,38 @@
     return URL.createObjectURL(new Blob([b],{type:"audio/wav"}))}
   
   var RT = null, rEl = null, rArmed = false, wl = null, ordS = "none", rang = {}, rSrc = null, rOrigin = "", vT = null, stopT = null, rInv = "";
-  // الرنة: ملف ring.mp3 (لو ما تحمّل نرجع للنغمة المولّدة)
-  function rAudio() { if (!rEl) { rEl = new Audio(); rEl.onerror = function () { if (rEl.src.indexOf("blob:") !== 0) { rEl.src = RT || (RT = ryaTone()); } }; rEl.src = "ring.mp3"; rEl.loop = true; rEl.preload = "auto"; } return rEl; }
+  // صوت واحد للحالتين: «حارس» شبه صامت وهو ينتظر (يخلّي التطبيق صاحي بالخلفية مثل الموسيقى)، و«رنة» ring.mp3 لما يجهز
+  var ST = null, rMode = "";
+  function silentTone() { var sr = 8000, n = sr * 2, b = new DataView(new ArrayBuffer(44 + n * 2));
+    function w(o, s) { for (var i = 0; i < s.length; i++) b.setUint8(o + i, s.charCodeAt(i)); }
+    w(0, "RIFF"); b.setUint32(4, 36 + n * 2, true); w(8, "WAVEfmt "); b.setUint32(16, 16, true); b.setUint16(20, 1, true); b.setUint16(22, 1, true);
+    b.setUint32(24, sr, true); b.setUint32(28, sr * 2, true); b.setUint16(32, 2, true); b.setUint16(34, 16, true); w(36, "data"); b.setUint32(40, n * 2, true);
+    for (var i = 0; i < n; i++) b.setInt16(44 + i * 2, (Math.random() * 4 - 2) | 0, true);   // همس ما ينسمع (الصفر الكامل ممكن الجوال يوقفه)
+    return URL.createObjectURL(new Blob([b], { type: "audio/wav" })); }
+  function rAudio() { if (!rEl) { rEl = new Audio(); rEl.loop = true; rEl.preload = "auto"; rEl.setAttribute("playsinline", "");
+      rEl.onerror = function () { if (rMode === "ring" && rEl.src.indexOf("blob:") !== 0) { rEl.src = RT || (RT = ryaTone()); try { rEl.play(); } catch (e) {} } }; } return rEl; }
+  function playMode(mode) {
+    var a = rAudio(); rMode = mode; a.muted = false; a.loop = true;
+    a.src = mode === "ring" ? "ring.mp3" : (ST || (ST = silentTone()));
+    try { a.currentTime = 0; } catch (e) {}
+    var p = a.play(); if (p && p.catch) p.catch(function () {});
+  }
+  function mediaMeta(title) {
+    try { if (!("mediaSession" in navigator)) return;
+      navigator.mediaSession.metadata = new MediaMetadata({ title: title, artist: "Rya coffee", album: "Rya coffee", artwork: [{ src: "rya-icon.png", sizes: "512x512", type: "image/png" }] });
+    } catch (e) {}
+  }
+  try { if ("mediaSession" in navigator) navigator.mediaSession.setActionHandler("pause", function () { if (rMode === "ring") document.getElementById("rdyGo").onclick(); }); } catch (e) {}
+  // الحارس: يشتغل وهو ينتظر طلبه وفعّل الرنة
+  function keepOn() { if (!rArmed || ordS !== "wait") return; var a = rAudio(); if (rMode === "keep" && !a.paused) return; playMode("keep"); mediaMeta("☕ بانتظار طلبك " + rInv + " · بنرن لك أول ما يجهز"); }
+  function keepOff() { if (rMode === "keep") { try { rEl.pause(); } catch (e) {} rMode = ""; } }
+  // التطبيق نفسه يسأل عن الطلب كل ٦ ثواني (يشتغل حتى لو الزبون برا التطبيق)
+  var hpT = null;
+  function hostPoll() {
+    if (!t || !rArmed || ordS !== "wait") { clearInterval(hpT); hpT = null; return; }
+    fetch(EXEC + "?ord=1&t=" + t + "&_=" + Date.now()).then(function (r) { return r.json(); }).then(function (o) { if (o && o.s && (o.s !== ordS || o.id)) applyOrd(o); }).catch(function () {});
+  }
+  function hostPollOn() { if (!hpT && rArmed && ordS === "wait" && t) hpT = setInterval(hostPoll, 6000); }
   // قصاصات ذهبية تنفجر مع «طلبك جاهز»
   function rdyBurst() {
     if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -568,8 +598,12 @@
   function rSession() { try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch (e) {} }
   function armRing() {   // لازم تكون من ضغطة الزبون (شرط الآيفون)
     rSession();
-    try { var a = rAudio(); a.muted = true; var p = a.play(); if (p && p.then) p.then(function () { if (document.getElementById("rdy").hidden) a.pause(); a.muted = false; }, function () { a.muted = false; }); else a.muted = false; } catch (e) {}
-    rArmed = true; lockOn(); paintRing();
+    rArmed = true;
+    try {
+      if (ordS === "wait") keepOn();   // يبدأ الحارس من نفس الضغطة (شرط الآيفون)
+      else { var a = rAudio(); a.src = ST || (ST = silentTone()); var p = a.play(); if (p && p.then) p.then(function () { if (rMode !== "ring") a.pause(); }, function () {}); }
+    } catch (e) {}
+    lockOn(); paintRing(); hostPollOn();
     try { navigator.vibrate && navigator.vibrate(30); } catch (e) {}
   }
   function lockOn() { if (ordS === "none" || wl || !("wakeLock" in navigator)) return; navigator.wakeLock.request("screen").then(function (l) { wl = l; l.addEventListener("release", function () { wl = null; }); }, function () {}); }
@@ -582,7 +616,7 @@
     document.getElementById("ringDot").hidden = !rArmed;
     document.getElementById("ringOn").hidden = rArmed;
     document.getElementById("ringTxt").textContent = rArmed
-      ? "الرنة شغّالة لطلب " + rInv + " · خلّ التطبيق مفتوح وارفع الصوت"
+      ? "🔔 الرنة شغّالة لطلب " + rInv + " · تقدر تطلع من التطبيق، بنرن لك (ارفع الصوت)"
       : "فعّل الرنة عشان يرن جوالك أول ما يجهز طلبك";
   }
   function ringStart(inv) {
@@ -591,14 +625,14 @@
     hideSplash();
     try { rdyBurst(); } catch (e) {}
     rSession();
-    try { var a = rAudio(); a.muted = false; a.currentTime = 0; var p = a.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+    try { playMode("ring"); mediaMeta("🔔 طلبك " + inv + " جاهز! تفضّل استلمه"); } catch (e) {}
     var vib = function () { try { navigator.vibrate && navigator.vibrate([600, 250, 600, 250, 600]); } catch (e) {} };
     vib(); clearInterval(vT); vT = setInterval(vib, 2600);
     clearTimeout(stopT); stopT = setTimeout(ringStop, 3 * 60 * 1000);   // تسكت لحالها بعد ٣ دقايق
   }
   function ringStop() {
     document.getElementById("rdy").hidden = true;
-    try { rEl && rEl.pause(); } catch (e) {}
+    if (rMode === "ring") { try { rEl.pause(); } catch (e) {} rMode = ""; }
     clearInterval(vT); clearTimeout(stopT);
     try { navigator.vibrate && navigator.vibrate(0); } catch (e) {}
   }
@@ -611,9 +645,14 @@
   function onOrd(o, e) {
     rSrc = e.source; rOrigin = e.origin;
     try { e.source.postMessage({ rya_host: 2 }, e.origin); } catch (x) {}
+    applyOrd(o);
+  }
+  // حالة الطلب (من صفحة الولاء أو من سؤال التطبيق بالخلفية)
+  function applyOrd(o) {
     ordS = o && o.s || "none"; rInv = o && o.inv || "";
     if (ordS === "ready" && o.id && !rang[o.id]) { rang[o.id] = 1; ringStart(o.inv); }
     if (ordS !== "ready") ringStop();
+    if (ordS === "wait" && rArmed) { keepOn(); hostPollOn(); } else keepOff();
     if (ordS === "none") lockOff(); else if (rArmed) lockOn();
     paintRing();
   }
