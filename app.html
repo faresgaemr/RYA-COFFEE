@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
-<head>
+<head><script>/* حركات Rya تطلع للكل حتى لو الجهاز مفعّل «تقليل الحركة» */(function(){var m=window.matchMedia;if(!m)return;window.matchMedia=function(q){if(/reduced-motion/.test(q))return {matches:false,media:q,onchange:null,addListener:function(){},removeListener:function(){},addEventListener:function(){},removeEventListener:function(){},dispatchEvent:function(){return false}};return m.call(window,q)}})()</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Rya coffee</title>
@@ -65,7 +65,7 @@
   @keyframes spDust{0%{opacity:0;transform:translateY(0)}15%{opacity:.9}100%{opacity:0;transform:translateY(-105vh)}}
   #frameWrap{transition:transform .8s cubic-bezier(.22,1,.36,1),opacity .8s}
   body.boot #frameWrap{transform:scale(.94);opacity:0}
-  @media (prefers-reduced-motion:reduce){#splash *,#splash *::before,#splash *::after{animation:none!important;opacity:1!important;transform:none!important;filter:none!important;stroke-dashoffset:0!important}body.boot #frameWrap{transform:none}}
+  @media (max-width:1px) and (min-width:2px){#splash *,#splash *::before,#splash *::after{animation:none!important;opacity:1!important;transform:none!important;filter:none!important;stroke-dashoffset:0!important}body.boot #frameWrap{transform:none}}
   #frameWrap{flex:1;position:relative;overflow:auto;-webkit-overflow-scrolling:touch}
   iframe{border:0;position:absolute;inset:0;width:100%;height:100%;display:block}
   #inst{display:flex;align-items:center;gap:10px;background:#fff;color:#1B2F4F;padding:10px 14px;font-size:14px;line-height:1.5;border-bottom:1px solid #D9D2CB}
@@ -124,7 +124,7 @@
   #cBtn::before{content:"";position:absolute;inset:-6px;border-radius:50%;border:1.5px solid rgb(217 190 140 / .55);animation:ring 2.4s ease-out 3}
   #cBtn::after{content:"";position:absolute;top:2px;right:2px;width:11px;height:11px;border-radius:50%;background:#25D366;border:2px solid #13213A}
   @keyframes ring{0%{transform:scale(.9);opacity:1}100%{transform:scale(1.4);opacity:0}}
-  @media (prefers-reduced-motion:reduce){#cBtn::before{animation:none;opacity:0}}
+  @media (max-width:1px) and (min-width:2px){#cBtn::before{animation:none;opacity:0}}
   #cBtn svg{width:24px;height:24px}
   /* زر التواصل العائم انشال: صار زر داخل صفحة «تواصل» في التطبيق */
   #cBtn{display:none!important}
@@ -188,7 +188,7 @@
   @keyframes rdyBeat{0%,100%{transform:scale(1)}14%{transform:scale(1.08)}28%{transform:scale(1)}42%{transform:scale(1.05)}}
   @keyframes rdyUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
   @keyframes rdyHalo{from{transform:scale(1);opacity:.9}to{transform:scale(1.12,1.35);opacity:0}}
-  @media (prefers-reduced-motion:reduce){#rdy .rg i,#rdy::before,#rdy *,#rdy button::after{animation:none!important}}
+  @media (max-width:1px) and (min-width:2px){#rdy .rg i,#rdy::before,#rdy *,#rdy button::after{animation:none!important}}
   /* ===== مشاركة ملخّص الشهر ===== */
   #shSheet{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));background:rgb(8 14 26 / .88);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
   #shSheet[hidden]{display:none}
