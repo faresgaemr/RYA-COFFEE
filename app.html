@@ -110,6 +110,9 @@
   #nModal p{margin:0 0 6px;font-size:14.5px;line-height:1.75;color:#3B4352}
   #nModal ul{list-style:none;padding:0;margin:10px 0 16px;font-size:14px;line-height:2;color:#1B2F4F;text-align:right;display:inline-block}
   #nModal .go{font:inherit;font-weight:700;font-size:16px;border:0;border-radius:12px;padding:13px;width:100%;background:#1B2F4F;color:#fff;cursor:pointer}
+  #nModal ol{margin:10px 0 16px;padding:0 22px 0 0;font-size:14.5px;line-height:1.9;color:#1B2F4F;text-align:right}
+  #nModal ol[hidden],#nModal ul[hidden]{display:none}
+  #nModal ol li{margin-bottom:4px}
   #nModal .skip{font:inherit;font-size:14px;border:0;background:transparent;color:#6A7180;padding:12px;width:100%;cursor:pointer}
   /* زر التواصل العائم */
   /* زر التواصل: صغير وأنيق تحت يسار، ويرتفع لما تطلع سلة الطلب */
@@ -240,7 +243,8 @@
     <div class="ic">🔔</div>
     <h2 id="nTitle">فعّل التنبيهات</h2>
     <p>عشان ما يفوتك شي من Rya coffee:</p>
-    <ul><li>☕ لما يجهز طلبك</li><li>🎉 عروضنا الجديدة</li><li>💎 لما تنضاف لك نقاط</li></ul>
+    <ul id="nList"><li>☕ لما يجهز طلبك</li><li>🎉 عروضنا الجديدة</li><li>💎 لما تنضاف لك نقاط</li></ul>
+    <ol id="nSteps" hidden></ol>
     <button type="button" class="go" id="nGo">فعّل التنبيهات</button>
     <button type="button" class="skip" id="nSkip">تخطّي</button>
   </div>
@@ -342,6 +346,22 @@
       ? "🔕 التنبيهات مقفولة. تقدر تفتحها بدون ما تحذف التطبيق: روح <b>الإعدادات</b> ← <b>الإشعارات</b> ← <b>Rya coffee</b> ← شغّل <b>«السماح بالإشعارات»</b>، وارجع للتطبيق."
       : "🔕 التنبيهات مقفولة. تقدر تفتحها بدون ما تحذف التطبيق: اضغط مطوّل على أيقونة Rya ← <b>معلومات التطبيق</b> ← <b>الإشعارات</b> ← <b>سماح</b>، وارجع للتطبيق.";
   }
+  // الجوال قفل نافذة السماح: نفس النافذة تتحوّل لخطوات قصيرة (بدون حذف التطبيق)
+  var nStepsOn = false;
+  function denySteps() {
+    var S = iosDevice
+      ? ["افتح <b>الإعدادات</b> في جوالك", "اختر <b>الإشعارات</b>", "انزل واختر <b>Rya coffee</b>", "شغّل <b>«السماح بالإشعارات»</b> وارجع هنا"]
+      : ["اضغط مطوّل على أيقونة <b>Rya</b>", "اختر <b>معلومات التطبيق</b> ⓘ", "اختر <b>الإشعارات</b>", "شغّلها وارجع هنا"];
+    document.getElementById("nSteps").innerHTML = S.map(function (x) { return "<li>" + x + "</li>"; }).join("");
+    document.getElementById("nSteps").hidden = false; document.getElementById("nList").hidden = true;
+    document.getElementById("nTitle").textContent = "باقي خطوة وحدة 👇";
+    document.getElementById("nGo").textContent = "تمام، فعّلتها ✅";
+    nStepsOn = true; document.getElementById("nModal").hidden = false;
+  }
+  function nReset() {
+    nStepsOn = false; document.getElementById("nSteps").hidden = true; document.getElementById("nList").hidden = false;
+    document.getElementById("nTitle").textContent = "فعّل التنبيهات"; document.getElementById("nGo").textContent = "فعّل التنبيهات";
+  }
   // لما يرجع من الإعدادات وقد سمح: نربطه بالتنبيهات تلقائياً
   var subBusy = false;
   function autoSub() {
@@ -353,11 +373,11 @@
   }
   function updateBell() {
     var bell = document.getElementById("bell");
-    var hidden = false; try { hidden = localStorage.getItem("rya_bell_x") === "1" && Notification.permission !== "default"; } catch (e) {}
+    var hidden = false;
     if (hidden || (iosDevice && !standaloneApp) || !("Notification" in window) || !("serviceWorker" in navigator)) { bell.hidden = true; return; }
     var perm = Notification.permission;
-    if (perm === "granted") { bell.hidden = true; autoSub(); return; }
-    if (perm === "denied") { bellMsg(denyMsg(), ""); return; }
+    if (perm === "granted") { bell.hidden = true; if (nStepsOn) { hideModal(); nReset(); } autoSub(); return; }
+    if (perm === "denied") { bell.hidden = true; showModal(); return; }   // نفس نافذة البداية وزرها
     bell.hidden = true; showModal();
   }
   if (ONESIGNAL_APP_ID && ONESIGNAL_APP_ID.indexOf("ضع_هنا") !== 0) {
@@ -403,7 +423,7 @@
     bellMsg("⏳ جارٍ التفعيل…", "");
     Promise.resolve(req).then(function (perm) {
       perm = perm || Notification.permission;
-      if (perm === "denied") { bellMsg(denyMsg(), ""); throw null; }
+      if (perm === "denied") { document.getElementById("bell").hidden = true; denySteps(); throw null; }
       if (perm !== "granted") { bellMsg("🔔 ما تم السماح. اضغط «فعّل» واختر «سماح».", "فعّل"); throw null; }
       return waitOS(15000);
     }).then(function () {
@@ -430,9 +450,17 @@
   document.getElementById("cBtn").onclick = function () { document.getElementById("cSheet").hidden = false; };
   document.getElementById("cClose").onclick = function () { document.getElementById("cSheet").hidden = true; };
   document.getElementById("cSheet").onclick = function (e) { if (e.target === this) this.hidden = true; };
-  document.getElementById("nGo").onclick = function () { hideModal(); document.getElementById("bellOn").onclick(); };
+  document.getElementById("nGo").onclick = function () {
+    if (nStepsOn) {   // رجع من الإعدادات: نتأكد
+      if (Notification.permission === "granted") { hideModal(); nReset(); autoSub(); bellMsg("✅ تم تفعيل التنبيهات", ""); setTimeout(function () { document.getElementById("bell").hidden = true; }, 2500); }
+      else { this.textContent = "لسا مقفولة 🔕 · سوّ الخطوات وارجع"; }
+      return;
+    }
+    hideModal(); document.getElementById("bellOn").onclick();
+  };
   document.getElementById("nSkip").onclick = function () {
     modalSkipped = true; try { localStorage.setItem("rya_nskip_at", String(Date.now())); } catch (e) {}
+    nReset();
     hideModal();
   };
   document.getElementById("bellX").onclick = function () {
