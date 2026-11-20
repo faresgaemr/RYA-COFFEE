@@ -110,6 +110,28 @@
   #cSheet .wa{background:linear-gradient(180deg,#2BD06A,#1FAF55);color:#fff;box-shadow:0 8px 18px rgb(31 175 85 / .3)}
   #cSheet .call{background:linear-gradient(135deg,#F3D58A,#C9A15C);color:#13213A}
   #cSheet .close{font:inherit;font-size:14px;border:0;background:transparent;color:#CBBFA9;padding:12px;width:100%;margin-top:4px;cursor:pointer}
+  /* ===== رنة الطلب الجاهز ===== */
+  #ringBar{display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:14px;line-height:1.5;color:#FFF6E3;background:linear-gradient(110deg,#1D3355,#13213A);border-bottom:1px solid rgb(217 190 140 / .35)}
+  #ringBar[hidden]{display:none}
+  #ringBar span{flex:1}
+  #ringBar button{font:inherit;font-weight:700;border:0;border-radius:11px;padding:9px 14px;background:linear-gradient(135deg,#F3D58A,#C9A15C);color:#13213A;cursor:pointer;white-space:nowrap}
+  #ringBar button[hidden]{display:none}
+  #ringBar.on{background:linear-gradient(110deg,#1F6B4B,#0E3A28)}
+  #ringBar .dot{width:9px;height:9px;border-radius:50%;background:#6CE0A0;box-shadow:0 0 0 0 rgb(108 224 160 / .6);animation:rbDot 1.6s ease-out infinite;flex:none}
+  @keyframes rbDot{to{box-shadow:0 0 0 9px rgb(108 224 160 / 0)}}
+  #rdy{position:fixed;inset:0;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px 22px calc(28px + env(safe-area-inset-bottom,0px));text-align:center;color:#fff;
+    background:radial-gradient(circle at 50% 38%,rgb(255 255 255 / .10) 0 2px,transparent 2px) 0 0/22px 22px,radial-gradient(600px 420px at 50% 35%,#D23A4C,transparent 70%),linear-gradient(170deg,#C02F42,#7E1424)}
+  #rdy[hidden]{display:none}
+  #rdy .rg{position:relative;width:170px;height:170px;display:grid;place-items:center;margin-bottom:8px}
+  #rdy .rg i{position:absolute;inset:0;border-radius:50%;border:2px solid rgb(255 255 255 / .55);animation:rdyRing 2.1s ease-out infinite}
+  #rdy .rg i:nth-child(2){animation-delay:.7s}#rdy .rg i:nth-child(3){animation-delay:1.4s}
+  @keyframes rdyRing{from{transform:scale(.45);opacity:1}to{transform:scale(1.35);opacity:0}}
+  #rdy .rg b{position:relative;min-width:96px;height:96px;padding:0 14px;border-radius:24px;display:grid;place-items:center;font-size:44px;font-weight:800;color:#7E1424;background:#FFF6E3;box-shadow:0 14px 34px rgb(0 0 0 / .3);direction:ltr}
+  #rdy h1{margin:0;font-size:38px;line-height:1.15;font-weight:800;letter-spacing:-.5px}
+  #rdy p{margin:0;font-size:17px;color:#FFE1E5}
+  #rdy button{margin-top:26px;width:100%;max-width:360px;font:inherit;font-size:19px;font-weight:800;border:0;border-radius:99px;padding:17px;background:#fff;color:#7E1424;box-shadow:0 12px 30px rgb(0 0 0 / .25);cursor:pointer}
+  #rdy small{color:#FFD0D6;font-size:13px}
+  @media (prefers-reduced-motion:reduce){#rdy .rg i,#ringBar .dot{animation:none}}
 </style>
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 </head>
@@ -175,6 +197,16 @@
     <a class="call" href="tel:+966532091333"><svg viewBox="0 0 24 24" fill="currentColor" style="width:20px;height:20px" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg> اتصل علينا</a>
     <button type="button" class="close" id="cClose">إغلاق</button>
   </div>
+</div>
+<!-- شريط «فعّل الرنة» وهو ينتظر طلبه -->
+<div id="ringBar" hidden role="status"><i class="dot" id="ringDot" hidden></i><span id="ringTxt"></span><button type="button" id="ringOn">🔔 فعّل الرنة</button></div>
+<!-- شاشة «طلبك جاهز» ترن لين يضغط -->
+<div id="rdy" hidden role="alertdialog" aria-modal="true" aria-labelledby="rdyT">
+  <div class="rg"><i></i><i></i><i></i><b id="rdyNo"></b></div>
+  <h1 id="rdyT">طلبك جاهز!</h1>
+  <p>تفضّل استلمه من الكاشير ☕</p>
+  <button type="button" id="rdyGo">في الطريق 🏃</button>
+  <small>اضغط عشان توقف الرنة</small>
 </div>
 <div id="frameWrap"><iframe id="rya" title="Rya coffee" allow="autoplay; clipboard-write"></iframe></div>
 <script>
@@ -448,13 +480,81 @@
     document.getElementById("inst").hidden = true;
   };
 
+
+  // ---- رنة الطلب الجاهز: نغمة حقيقية + الشاشة ما تطفي وهو ينتظر ----
+// نغمة رنة Rya: جرس ماريمبا يتكرر (تتولّد في الجوال، ما تحتاج ملف)
+  function ryaTone(){var sr=22050,dur=2.6,n=Math.floor(sr*dur),b=new DataView(new ArrayBuffer(44+n*2));
+    function w(o,s){for(var i=0;i<s.length;i++)b.setUint8(o+i,s.charCodeAt(i))}
+    w(0,"RIFF");b.setUint32(4,36+n*2,true);w(8,"WAVEfmt ");b.setUint32(16,16,true);b.setUint16(20,1,true);b.setUint16(22,1,true);
+    b.setUint32(24,sr,true);b.setUint32(28,sr*2,true);b.setUint16(32,2,true);b.setUint16(34,16,true);w(36,"data");b.setUint32(40,n*2,true);
+    var N=[[0,1318.5],[.15,1568],[.30,2093],[.45,1568],[.60,2093],[.75,2637],[1.25,1318.5],[1.40,1568],[1.55,2093],[1.70,1568],[1.85,2093],[2.00,2637]];
+    for(var i=0;i<n;i++){var t=i/sr,v=0;for(var k=0;k<N.length;k++){var dt=t-N[k][0];if(dt<0||dt>.55)continue;var f=N[k][1],e=Math.exp(-dt*8);
+        v+=e*(Math.sin(6.2832*f*dt)+.4*Math.sin(6.2832*f*2.01*dt)*Math.exp(-dt*18)+.25*Math.sin(6.2832*f*.5*dt))}
+      v=Math.max(-1,Math.min(1,v*.6));b.setInt16(44+i*2,v*32767,true)}
+    return URL.createObjectURL(new Blob([b],{type:"audio/wav"}))}
+  
+  var RT = null, rEl = null, rArmed = false, wl = null, ordS = "none", rang = {}, rSrc = null, rOrigin = "", vT = null, stopT = null, rInv = "";
+  function rAudio() { if (!rEl) { rEl = new Audio(); rEl.src = RT || (RT = ryaTone()); rEl.loop = true; rEl.preload = "auto"; } return rEl; }
+  function rSession() { try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch (e) {} }
+  function armRing() {   // لازم تكون من ضغطة الزبون (شرط الآيفون)
+    rSession();
+    try { var a = rAudio(); a.muted = true; var p = a.play(); if (p && p.then) p.then(function () { if (document.getElementById("rdy").hidden) a.pause(); a.muted = false; }, function () { a.muted = false; }); else a.muted = false; } catch (e) {}
+    rArmed = true; lockOn(); paintRing();
+    try { navigator.vibrate && navigator.vibrate(30); } catch (e) {}
+  }
+  function lockOn() { if (ordS === "none" || wl || !("wakeLock" in navigator)) return; navigator.wakeLock.request("screen").then(function (l) { wl = l; l.addEventListener("release", function () { wl = null; }); }, function () {}); }
+  function lockOff() { try { wl && wl.release(); } catch (e) {} wl = null; }
+  document.addEventListener("visibilitychange", function () { if (!document.hidden && ordS !== "none" && rArmed) lockOn(); });
+  function paintRing() {
+    var bar = document.getElementById("ringBar");
+    if (ordS !== "wait") { bar.hidden = true; return; }
+    bar.hidden = false; bar.classList.toggle("on", rArmed);
+    document.getElementById("ringDot").hidden = !rArmed;
+    document.getElementById("ringOn").hidden = rArmed;
+    document.getElementById("ringTxt").textContent = rArmed
+      ? "الرنة شغّالة لطلب " + rInv + " · خلّ التطبيق مفتوح وارفع الصوت"
+      : "فعّل الرنة عشان يرن جوالك أول ما يجهز طلبك";
+  }
+  function ringStart(inv) {
+    document.getElementById("rdyNo").textContent = inv;
+    document.getElementById("rdy").hidden = false;
+    hideSplash();
+    rSession();
+    try { var a = rAudio(); a.muted = false; a.currentTime = 0; var p = a.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+    var vib = function () { try { navigator.vibrate && navigator.vibrate([600, 250, 600, 250, 600]); } catch (e) {} };
+    vib(); clearInterval(vT); vT = setInterval(vib, 2600);
+    clearTimeout(stopT); stopT = setTimeout(ringStop, 3 * 60 * 1000);   // تسكت لحالها بعد ٣ دقايق
+  }
+  function ringStop() {
+    document.getElementById("rdy").hidden = true;
+    try { rEl && rEl.pause(); } catch (e) {}
+    clearInterval(vT); clearTimeout(stopT);
+    try { navigator.vibrate && navigator.vibrate(0); } catch (e) {}
+  }
+  document.getElementById("ringOn").onclick = armRing;
+  document.getElementById("rdyGo").onclick = function () {
+    ringStop();
+    if (rSrc) try { rSrc.postMessage({ rya_got: 1 }, rOrigin); } catch (e) {}
+  };
+  // صفحة الولاء تبلّغنا بحالة الطلب: wait / ready / none
+  function onOrd(o, e) {
+    rSrc = e.source; rOrigin = e.origin;
+    try { e.source.postMessage({ rya_host: 2 }, e.origin); } catch (x) {}
+    ordS = o && o.s || "none"; rInv = o && o.inv || "";
+    if (ordS === "ready" && o.id && !rang[o.id]) { rang[o.id] = 1; ringStart(o.inv); }
+    if (ordS !== "ready") ringStop();
+    if (ordS === "none") lockOff(); else if (rArmed) lockOn();
+    paintRing();
+  }
+
   // صفحة الولاء ترسل رابط الدخول بعد ما يدخل الزبون، فنحفظه هنا ونربطه بالإشعارات
   window.addEventListener("message", function (e) {
     var host = ""; try { host = new URL(e.origin).hostname; } catch (x) {}
     if (!/\.googleusercontent\.com$/.test(host)) return;
     if (e.data && typeof e.data.rya_cart === "boolean") { document.getElementById("cBtn").classList.toggle("up", e.data.rya_cart); return; }
     if (e.data && e.data.rya_theme) { document.body.classList.toggle("dk", e.data.rya_theme === "dark"); document.body.classList.toggle("lt", e.data.rya_theme === "light"); return; }
-    if (e.data && e.data.rya_ready) { frameReady = true; document.getElementById("off").hidden = true; hideSplash(); return; }
+    if (e.data && e.data.rya_ord) { onOrd(e.data.rya_ord, e); return; }
+    if (e.data && e.data.rya_ready) { try { e.source.postMessage({ rya_host: 2 }, e.origin); } catch (x) {} frameReady = true; document.getElementById("off").hidden = true; hideSplash(); return; }
     if (!e.data || typeof e.data.rya_t !== "string") return;
     var nt = e.data.rya_t.replace(/[^a-f0-9]/g, "");
     try { if (nt) localStorage.setItem("rya_t", nt); else localStorage.removeItem("rya_t"); } catch (x) {}
