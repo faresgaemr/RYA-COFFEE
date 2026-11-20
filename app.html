@@ -336,13 +336,28 @@
   setInterval(function () { updateBell(); }, 60 * 1000);
   document.addEventListener("visibilitychange", function () { if (!document.hidden) setTimeout(updateBell, 1500); });
   function hideModal() { document.getElementById("nModal").hidden = true; }
+  // التنبيهات مقفولة: نشرح كيف يفتحها من الإعدادات (بدون حذف التطبيق)
+  function denyMsg() {
+    return iosDevice
+      ? "🔕 التنبيهات مقفولة. تقدر تفتحها بدون ما تحذف التطبيق: روح <b>الإعدادات</b> ← <b>الإشعارات</b> ← <b>Rya coffee</b> ← شغّل <b>«السماح بالإشعارات»</b>، وارجع للتطبيق."
+      : "🔕 التنبيهات مقفولة. تقدر تفتحها بدون ما تحذف التطبيق: اضغط مطوّل على أيقونة Rya ← <b>معلومات التطبيق</b> ← <b>الإشعارات</b> ← <b>سماح</b>، وارجع للتطبيق.";
+  }
+  // لما يرجع من الإعدادات وقد سمح: نربطه بالتنبيهات تلقائياً
+  var subBusy = false;
+  function autoSub() {
+    if (subBusy || !osReady || !window.OneSignal || !OneSignal.User) return;
+    var sub = OneSignal.User.PushSubscription;
+    if (sub.id && sub.optedIn) return;
+    subBusy = true;
+    Promise.resolve(sub.optIn()).then(function () { linkUser(); setTimeout(reportPush, 3000); }).catch(function () {}).then(function () { subBusy = false; });
+  }
   function updateBell() {
     var bell = document.getElementById("bell");
     var hidden = false; try { hidden = localStorage.getItem("rya_bell_x") === "1" && Notification.permission !== "default"; } catch (e) {}
     if (hidden || (iosDevice && !standaloneApp) || !("Notification" in window) || !("serviceWorker" in navigator)) { bell.hidden = true; return; }
     var perm = Notification.permission;
-    if (perm === "granted") { bell.hidden = true; return; }
-    if (perm === "denied") { bellMsg("🔕 التنبيهات مقفولة لهذا التطبيق. عشان تفعّلها: احذف أيقونة Rya وأضفها من جديد.", ""); return; }
+    if (perm === "granted") { bell.hidden = true; autoSub(); return; }
+    if (perm === "denied") { bellMsg(denyMsg(), ""); return; }
     bell.hidden = true; showModal();
   }
   if (ONESIGNAL_APP_ID && ONESIGNAL_APP_ID.indexOf("ضع_هنا") !== 0) {
@@ -388,7 +403,7 @@
     bellMsg("⏳ جارٍ التفعيل…", "");
     Promise.resolve(req).then(function (perm) {
       perm = perm || Notification.permission;
-      if (perm === "denied") { bellMsg("🔕 اخترت «لا تسمح». عشان تفعّلها: احذف أيقونة Rya وأضفها من جديد.", ""); throw null; }
+      if (perm === "denied") { bellMsg(denyMsg(), ""); throw null; }
       if (perm !== "granted") { bellMsg("🔔 ما تم السماح. اضغط «فعّل» واختر «سماح».", "فعّل"); throw null; }
       return waitOS(15000);
     }).then(function () {
